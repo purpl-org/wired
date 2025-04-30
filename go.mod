@@ -1,4 +1,4 @@
-module github.com/kercre123/wire-os/wired
+module github.com/os-vector/wired
 
 go 1.19
 

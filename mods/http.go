@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kercre123/wire-os/wired/vars"
+	"github.com/os-vector/wired/vars"
 )
 
 func ImplHTTP() {

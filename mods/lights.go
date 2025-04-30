@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/kercre123/wire-os/wired/vars"
+	"github.com/os-vector/wired/vars"
 	cp "github.com/otiai10/copy"
 )
 

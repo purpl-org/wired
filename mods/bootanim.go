@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"time"
 
-	ba "github.com/kercre123/wire-os/wired/raw"
-	"github.com/kercre123/wire-os/wired/vars"
+	ba "github.com/os-vector/wired/raw"
+	"github.com/os-vector/wired/vars"
 	cp "github.com/otiai10/copy"
 )
 

@@ -13,7 +13,7 @@ import (
 
 	"github.com/kercre123/vector-gobot/pkg/vbody"
 	"github.com/kercre123/vector-gobot/pkg/vscreen"
-	"github.com/kercre123/wire-os/wired/vars"
+	"github.com/os-vector/wired/vars"
 	"github.com/maxhawkins/go-webrtcvad"
 	"github.com/youpy/go-wav"
 )
