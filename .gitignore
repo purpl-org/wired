@@ -1,3 +1,5 @@
 build/wired
 build/libvector-gobot.so
 vector-gobot/build/libvector-gobot.so
+oe-workdir
+oe-logs
