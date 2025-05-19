@@ -79,7 +79,7 @@ func WakeWordPV_HTTP(w http.ResponseWriter, r *http.Request) {
 		var reqKW WakeWordPVRequest
 		reqKW.Keyword = kw
 		jsonKW, _ := json.Marshal(reqKW)
-		resp, err := http.Post("http://192.168.1.105:8080/create-model", "application/json", bytes.NewReader(jsonKW))
+		resp, err := http.Post("https://keriganc.com/wakeword-pv/create-model", "application/json", bytes.NewReader(jsonKW))
 		if err != nil {
 			vars.HTTPError(w, r, "network error")
 			return
