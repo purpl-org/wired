@@ -91,7 +91,7 @@ func optimizeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/create-model", optimizeHandler)
+	http.HandleFunc("/wakeword-pv/create-model", optimizeHandler)
 	fmt.Println("listening on :8080")
 	http.ListenAndServe(":8080", nil)
 }
