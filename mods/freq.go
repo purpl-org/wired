@@ -127,7 +127,7 @@ func DoFreqChange(freq int) {
 		ramfreq = "400000"
 		gov = "interactive"
 	case freq == 1:
-		cpufreq = "733333"
+		cpufreq = "800000"
 		ramfreq = "600000"
 		gov = "ondemand"
 	case freq == 2:

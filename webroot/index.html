@@ -118,7 +118,7 @@
     <header>
         <h1>WireOS Settings</h1>
     </header>
-    <div class="container mod-section">
+    <div id="mainmods" class="container mod-section">
         <div id="modStatus"></div>
         <div id="mods">
             <h2>Performance Profiles</h2>
@@ -134,21 +134,19 @@
         </div>
     </div>
     <!-- just completely break the "mods" div convention i had because this is different -->
-    <div class="container mod-section">
+    <div id="cww" class="container mod-section">
         <h2>Custom Wake Word</h2>
-	<small>Tips: Say your wake word loud and clear, make sure it is at least three syllables.</small>
-	<br><br>
         <div id="wakeWordStatus"></div>
         <div class="button-container">
-            <button id="startTraining" onclick="startWakeWordFlow()">Train a new wake word</button>
-            <button id="wakeWordListen" onclick="doListen()" style="display:none">Listen</button>
-            <button id="startOver" onclick="startWakeWordOver()" style="display:none">Start Over</button>
-            <button id="genWakeWord" onclick="genWakeWord()" style="display:none">Generate Wake Word</button>
+            <label id="keywordLabel" for="keyword">Desired wake word:</label>
+            <input type="text" placeholder="Hey Vector" id="keyword">
+            <button id="genWakeWord" onclick="genWakeWord()">Generate Wake Word</button>
+            <button id="revertDefaultWakeWord" onclick="revertDefaultWakeWord()">Revert To Default</button>
         </div>
         <br>
     </div>
     <div id="showDuringVicRestart" class="container" style="display: none;">
-        <h1>Vector is restarting... please wait</h1>
+        <h1>Vector is restarting, please wait...</h1>
     </div>
     <div id="restartNeeded" class="container" style="display: none;">
         <h2>A vic restart is required for changes to take affect.</h2>

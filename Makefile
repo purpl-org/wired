@@ -1,6 +1,6 @@
 .PHONY: wired
 
-all: libvector-gobot wired
+all: wired
 
 go_deps:
 	echo `/usr/local/go/bin/go version` && /usr/local/go/bin/go mod download

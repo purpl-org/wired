@@ -128,54 +128,49 @@ function setWakeStatus(status) {
 
 let recIndex = 0
 
-async function startWakeWordFlow() {
-    recIndex = 0
-    hide("startTraining")
-    setWakeStatus("Starting listener... Vector's eyes will go dark.")
-    await fetch("/api/mods/wakeword/StartListener")
-    show("wakeWordListen")
-    hide("startTraining")
-    setWakeStatus("Listener started. Press 'Listen', wait for the countdown on Vector's screen, then say your wake word to Vector. Do this again at least two more times, then you will be able to click 'Generate Wake Word'.")
-}
-
-async function doListen() {
-    setWakeStatus("Listen request sent. Look at Vector's screen!")
-    hide("startOver")
-    hide("wakeWordListen")
-    await fetch("/api/mods/wakeword/Listen")
-    recIndex++
-    show("wakeWordListen")
-    if (recIndex >= 3) {
-        setWakeStatus("You now have three or more recordings, which means you can generate a wake word. You can create more recordings if you want better accuracy.<br><br>Recordings made: " + recIndex)
-        show("genWakeWord")
-    } else {
-        setWakeStatus("Press 'Listen', wait for the countdown on Vector's screen, then say your wake word to Vector.<br><br>Recordings made: " + recIndex)
-    }
-    if (recIndex >= 1) {
-        show("startOver")
-    }
-}
-
 async function genWakeWord() {
+    var keyword = document.getElementById("keyword").value
     setWakeStatus("Generating wake word...")
     hide("genWakeWord")
-    hide("wakeWordListen")
-    hide("startOver")
-    await fetch("/api/mods/wakeword/GenWakeWord")
-    setWakeStatus("Wake word generated and installed. Starting anki programs...")
-    await fetch("/api/mods/wakeword/StopListener")
-    setWakeStatus("Your custom wake word is now implemented.")
-    show("startTraining")
+    hide("keyword")
+    hide("revertDefaultWakeWord")
+    hide("keywordLabel")
+    try {
+        const res = await fetch("/api/mods/wakeword-pv/request-model?keyword=" + keyword)
+        if (!res.ok) {
+            const err = await res.json()  // { status, message }
+            setWakeStatus(`${err.status}: ${err.message}`)
+        } else {
+            setWakeStatus("Wake word generated and installed. Restarting anki programs...")
+            await RestartVic()
+            setWakeStatus("Your new wake word is now implemented.")
+        }
+    } catch (e) {
+        setWakeStatus(`network error: ${e.message}`)
+    } finally {
+        show("keyword")
+        show("genWakeWord")
+        show("revertDefaultWakeWord")
+        show("keywordLabel")
+    }
 }
 
-async function startWakeWordOver() {
-    setWakeStatus("Deleting data...")
-    await fetch("/api/mods/wakeword/StartOver")
+async function revertDefaultWakeWord() {
+    setWakeStatus("Deleting wake word...")
     hide("genWakeWord")
-    hide("startOver")
-    recIndex = 0
-    setWakeStatus("The recordings have been deleted. Press 'Listen', wait for the countdown on Vector's screen, then say your wake word to Vector.")
+    hide("keyword")
+    hide("revertDefaultWakeWord")
+    hide("keywordLabel")
+    await fetch("/api/mods/wakeword-pv/delete-model")
+    setWakeStatus("Custom model deleted. Restarting Anki programs...")
+    await RestartVic()
+    setWakeStatus("Custom model deleted.")
+    show("genWakeWord")
+    show("keyword")
+    show("keywordLabel")
+    show("revertDefaultWakeWord")
 }
+
 
 async function CheckIfRestartNeeded(mod) {
     let response = await fetch('/api/mods/needsrestart/' + mod, {
@@ -189,12 +184,14 @@ async function CheckIfRestartNeeded(mod) {
 
 async function RestartVic() { 
     SetModStatus("")
+    hide("cww")
+    hide("mainmods")
     document.getElementById("restartButton").disabled = true
-    document.getElementById('showDuringVicRestart').style.display = 'block';
+    document.getElementById('showDuringVicRestart').style.display = 'block';;
     document.getElementById('mods').style.display = 'none';
     fetch('/api/restartvic', {
         method: 'POST',
-    }).then(response => {console.log(response); document.getElementById("restartButton").disabled = false; document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block';})
+    }).then(response => {console.log(response); document.getElementById("restartButton").disabled = false; show("cww"); show("mainmods"); document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block';})
 }
 
 async function BootAnim_Test() {

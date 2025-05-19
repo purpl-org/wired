@@ -115,6 +115,7 @@ func HTTPError(w http.ResponseWriter, r *http.Request, err string) {
 	status.Status = "error"
 	status.Message = err
 	errorBytes, _ := json.Marshal(status)
+	w.WriteHeader(500)
 	w.Write(errorBytes)
 }
 
