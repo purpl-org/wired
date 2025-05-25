@@ -21,13 +21,13 @@
         header,
         .container {
             text-align: center;
-            padding: 20px;
+            padding: 10px;
             width: 80%;
             max-width: 600px;
             background-color: #333;
             border-radius: 10px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         header h1 {
@@ -35,12 +35,12 @@
         }
 
         h2 {
-            margin-top: 20px;
+            margin-top: 10px;
             color: #a855f7;
         }
 
         form {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         input[type="radio"],
@@ -96,7 +96,7 @@
         }
 
         .mod-section {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         #mods button,
@@ -110,7 +110,9 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            margin-bottom: 10px;
         }
+
     </style>
 </head>
 
@@ -143,7 +145,14 @@
             <button id="genWakeWord" onclick="genWakeWord()">Generate Wake Word</button>
             <button id="revertDefaultWakeWord" onclick="revertDefaultWakeWord()">Revert To Default</button>
         </div>
-        <br>
+    </div>
+    <div id="aud" class="container mod-section">
+        <h2>Auto Updates</h2>
+        <div id="autoUpdateStatus"></div>
+        <div class="button-container">
+            <button id="autoUpdateInhibit" onclick="autoUpdateInhibit()">Disable</button>
+            <button id="autoUpdateAllow" onclick="autoUpdateAllow()">Enable</button>
+        </div>
     </div>
     <div id="showDuringVicRestart" class="container" style="display: none;">
         <h1>Vector is restarting, please wait...</h1>

@@ -17,6 +17,7 @@ func ImplHTTP() {
 
 	http.HandleFunc("/api/mods/custom/TestBootAnim", BootAnim_HTTP)
 	http.HandleFunc("/api/mods/wakeword-pv/", WakeWordPV_HTTP)
+	http.HandleFunc("/api/mods/AutoUpdate/", AutoUpdate_HTTP)
 }
 
 func ModHTTPHandler(w http.ResponseWriter, r *http.Request) {

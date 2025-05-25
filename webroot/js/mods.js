@@ -6,12 +6,13 @@ async function UpdateAllMods(undata) {
 
     var data = await GetCurrent('FreqChange');
     var radioButtons = document.getElementsByName("frequency");
-    for(var i = 0; i < radioButtons.length; i++){
-        if(radioButtons[i].value == data.freq){
+    for (var i = 0; i < radioButtons.length; i++) {
+        if (radioButtons[i].value == data.freq) {
             radioButtons[i].checked = true;
             break;
         }
     }
+    checkAutoUpdateStatus()
 
     // data = await GetCurrent('RainbowLights');
     // console.log(data.enabled)
@@ -119,6 +120,61 @@ function show(element) {
     document.getElementById(element).style.display = 'block';
 }
 
+/*
+        <div id="autoUpdateStatus"></div>
+        <div class="button-container">
+            <button id="autoUpdateInhibit" onclick="autoUpdateInhibit()">Set Inhibited</button>
+            <button id="autoUpdateAllow" onclick="autoUpdateAllow()">Set Allowed</button>
+        </div>
+        <br>
+*/
+
+function setAutoUpdateStatus(status) {
+    document.getElementById("autoUpdateStatus").innerHTML = ""
+    let stat = document.createElement("p")
+    stat.innerHTML = status
+    document.getElementById("autoUpdateStatus").appendChild(stat)
+    show("autoUpdateStatus")
+}
+
+async function checkAutoUpdateStatus() {
+    hide("autoUpdateStatus")
+    hide("autoUpdateInhibit")
+    hide("autoUpdateAllow")
+    var res = await fetch("/api/mods/AutoUpdate/isSelfMadeBuild")
+    var str = await res.text() 
+    if (str.includes("true")) {
+        const err = await res.json()  // { status, message }
+        setAutoUpdateStatus("This is a self-made build. This cannot auto-update.")
+    } else {
+        res = await fetch("/api/mods/AutoUpdate/isInhibitedByUser")
+        str = await res.text() 
+        if (str.includes("true")) {
+            setAutoUpdateStatus("Auto-updates: not enabled")
+            show("autoUpdateAllow")
+        } else {
+            setAutoUpdateStatus("Auto-updates: enabled")
+            show("autoUpdateInhibit")
+        }
+    }
+}
+
+async function autoUpdateInhibit() {
+    hide("autoUpdateStatus")
+    hide("autoUpdateInhibit")
+    hide("autoUpdateAllow")
+    await fetch("/api/mods/AutoUpdate/setInhibited")
+    checkAutoUpdateStatus()
+}
+
+async function autoUpdateAllow() {
+    hide("autoUpdateStatus")
+    hide("autoUpdateInhibit")
+    hide("autoUpdateAllow")
+    await fetch("/api/mods/AutoUpdate/setAllowed")
+    checkAutoUpdateStatus()
+}
+
 function setWakeStatus(status) {
     document.getElementById("wakeWordStatus").innerHTML = ""
     let stat = document.createElement("p")
@@ -182,16 +238,17 @@ async function CheckIfRestartNeeded(mod) {
     }
 }
 
-async function RestartVic() { 
+async function RestartVic() {
     SetModStatus("")
     hide("cww")
+    hide("aud")
     hide("mainmods")
     document.getElementById("restartButton").disabled = true
     document.getElementById('showDuringVicRestart').style.display = 'block';;
     document.getElementById('mods').style.display = 'none';
     fetch('/api/restartvic', {
         method: 'POST',
-    }).then(response => {console.log(response); document.getElementById("restartButton").disabled = false; show("cww"); show("mainmods"); document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block';})
+    }).then(response => { console.log(response); document.getElementById("restartButton").disabled = false; show("cww"); show("aud"); show("mainmods"); document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block'; })
 }
 
 async function BootAnim_Test() {
@@ -215,7 +272,7 @@ function bootAnimCheckValidate() {
     let checkbox = document.getElementById('bootAnimDefault');
     let divUpload = document.getElementById('bootAnimUploadHide');
 
-    if(checkbox.checked == true) {
+    if (checkbox.checked == true) {
         divUpload.style.display = "none";
         document.getElementById('bootAnimCurrent').style.display = "none";
     } else {
@@ -229,7 +286,7 @@ async function BootAnim_Submit() {
     let inputFile = document.getElementById('bootAnimUpload');
     let gifData = "";
 
-    if(checkbox.checked == false && inputFile.files.length > 0) {
+    if (checkbox.checked == false && inputFile.files.length > 0) {
         let file = inputFile.files[0];
         gifData = await new Promise((resolve) => {
             let reader = new FileReader();
