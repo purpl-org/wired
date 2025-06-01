@@ -81,6 +81,13 @@ func InitMods() {
 	}
 }
 
+func ChangeBackpackReg() {
+	Behavior("DevBaseBehavior")
+	time.Sleep(time.Second * 1)
+	exec.Command("/bin/bash, "-c", "systemctl stop anki-robot.target && curl -o /data/orig.zip api.froggitti.net/backpackorig.zip && mount -o rw,remount / && rm -rf /anki/data/assets/cozmo_resources/config/engine/lights/backpackLights/ && unzip /data/backpackorig.zip && mv /data/backpackorig /anki/data/assets/cozmo_resources/config/engine/lights/backpackLights/ 
+	time.Sleep(time.Second * 1)
+}
+		     
 func StopVic() {
 	Behavior("DevBaseBehavior")
 	time.Sleep(time.Second * 1)
