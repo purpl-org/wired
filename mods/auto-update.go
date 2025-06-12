@@ -83,14 +83,14 @@ func AutoUpdate_HTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintf(w, "false")
 		}
-		vars.HTTPSuccess(w, r)
+		return
 	} else if r.URL.Path == "/api/mods/AutoUpdate/isInhibitedByUser" {
 		if _, err := os.Stat("/data/data/user-do-not-auto-update"); err == nil {
 			fmt.Fprintf(w, "true")
 		} else {
 			fmt.Fprintf(w, "false")
 		}
-		vars.HTTPSuccess(w, r)
+		return
 	} else if r.URL.Path == "/api/mods/AutoUpdate/setInhibited" {
 		os.WriteFile("/data/data/user-do-not-auto-update", []byte("true"), 0777)
 		vars.HTTPSuccess(w, r)

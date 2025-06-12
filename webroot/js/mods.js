@@ -144,8 +144,7 @@ async function checkAutoUpdateStatus() {
     var res = await fetch("/api/mods/AutoUpdate/isSelfMadeBuild")
     var str = await res.text() 
     if (str.includes("true")) {
-        const err = await res.json()  // { status, message }
-        setAutoUpdateStatus("This is a self-made build. This cannot auto-update.")
+        setAutoUpdateStatus("This is a self-made build. This build cannot auto-update.")
     } else {
         res = await fetch("/api/mods/AutoUpdate/isInhibitedByUser")
         str = await res.text() 
