@@ -11,12 +11,12 @@ libvector-gobot:
 
 wired: go_deps
 	echo $(PWD)/vector-gobot/build
-	CGO_LDFLAGS="-L$(PWD)/vector-gobot/build/ -Wl,-rpath-link,${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/sysroot/lib -Wl,-rpath-link,${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/sysroot/usr/lib -latomic" \
+	CGO_LDFLAGS="-L$(PWD)/vector-gobot/build/ -Wl,-rpath-link,${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/sysroot/lib -Wl,-rpath-link,${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/sysroot/usr/lib" \
 	CGO_CFLAGS="-I$(PWD)/vector-gobot/include" \
 	CGO_ENABLED=1 GOARM=7 GOARCH=arm CC=${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/prebuilt/bin/arm-oe-linux-gnueabi-clang \
 	CXX=${HOME}/.anki/vicos-sdk/dist/5.2.1-r06/prebuilt/bin/arm-oe-linux-gnueabi-clang++ \
 	 /usr/local/go/bin/go build -tags vicos -ldflags '-w -s' -o build/wired main.go
-	upx build/wired
+	upx --best --lzma build/wired
 
 
 #vic-gateway: go_deps

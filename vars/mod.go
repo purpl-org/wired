@@ -4,65 +4,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 const (
-	SysRoot = "/"
-	// for applying mods to updates
-	Update_SysRoot  = "/mnt/"
-	VectorResources = "anki/data/assets/cozmo_resources/"
+	VectorResources = "/anki/data/assets/cozmo_resources/"
+	WiredData       = "/data/wired/mods/"
 )
 
 type Modification interface {
 	Name() string
 	Description() string
-	Accepts() string
-	DefaultJSON() any
-	Save(string, string) error
-	// note: Load() runs at init of program
+	HTTP(w http.ResponseWriter, r *http.Request)
 	Load() error
-	// current settings of mod
-	Current() string
-	// fs root
-	ToFS(string)
-	RestartRequired() bool
-	Do(string, string) error
-}
-
-type BaseModification struct {
-	Modification
-	ModName            string
-	ModDescription     string
-	VicRestartRequired bool
-}
-
-func (bc *BaseModification) Name() string {
-	return bc.ModName
-}
-
-func (bc *BaseModification) Description() string {
-	return bc.ModDescription
-}
-
-func (bc *BaseModification) RestartRequired() bool {
-	return bc.VicRestartRequired
 }
 
 var EnabledMods []Modification
 
-func GetModDir(mod Modification, where string) string {
-	path := where + "data/wired/mods/" + mod.Name() + "/"
-	os.MkdirAll(path, 0777)
-	return path
+func IsEndpoint(r *http.Request, endpoint string) bool {
+	return strings.Contains(r.URL.Path, endpoint)
 }
 
 func FindMod(name string) (Modification, error) {
@@ -74,22 +39,55 @@ func FindMod(name string) (Modification, error) {
 	return nil, errors.New("mod not found")
 }
 
-func InitMods() {
-	for _, mod := range EnabledMods {
-		fmt.Println("Loading " + mod.Name() + "...")
-		mod.Load()
+func GetModDir(modname string) string {
+	return filepath.Join(WiredData, modname)
+}
+
+func SaveFile(contents string, path string) error {
+	os.MkdirAll(path, 0777)
+	return os.WriteFile(path, []byte(contents), 0777)
+}
+
+func ReadFile(path string) (contents string, err error) {
+	fmt.Println(path)
+	out, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func ExtraHTTP(w http.ResponseWriter, r *http.Request) {
+	if IsEndpoint(r, "restartvic") {
+		RestartVic()
+		HTTPSuccess(w, r)
+	} else {
+		HTTPError(w, r, "not found")
 	}
 }
 
+func InitMods() {
+	for _, mod := range EnabledMods {
+		fmt.Println("Loading " + mod.Name() + "...")
+		err := mod.Load()
+		if err != nil {
+			fmt.Println("ERROR loading", mod.Name(), ":", err)
+			continue
+		}
+		http.HandleFunc("/api/mods/"+mod.Name()+"/", mod.HTTP)
+	}
+	http.HandleFunc("/api/extra/", ExtraHTTP)
+}
+
 func StopVic() {
-	Behavior("DevBaseBehavior")
+	// Behavior("DevBaseBehavior")
 	time.Sleep(time.Second * 1)
-	exec.Command("/bin/bash", "-c", "systemctl stop anki-robot.target && sleep 1 && systemctl stop mm-anki-camera && systemctl stop mm-qcamera-daemon").Output()
+	exec.Command("/bin/bash", "-c", "systemctl stop anki-robot.target").Output()
 	time.Sleep(time.Second * 4)
 }
 
 func StartVic() {
-	exec.Command("/bin/bash", "-c", "systemctl start mm-qcamera-daemon && systemctl start mm-anki-camera && sleep 1 && systemctl start anki-robot.target").Output()
+	exec.Command("/bin/bash", "-c", "systemctl start anki-robot.target").Output()
 	time.Sleep(time.Second * 3)
 }
 
@@ -119,46 +117,46 @@ func HTTPError(w http.ResponseWriter, r *http.Request, err string) {
 	w.Write(errorBytes)
 }
 
-type BehaviorMessage struct {
-	Type   string `json:"type"`
-	Module string `json:"module"`
-	Data   struct {
-		BehaviorName     string `json:"behaviorName"`
-		PresetConditions bool   `json:"presetConditions"`
-	} `json:"data"`
-}
+// type BehaviorMessage struct {
+// 	Type   string `json:"type"`
+// 	Module string `json:"module"`
+// 	Data   struct {
+// 		BehaviorName     string `json:"behaviorName"`
+// 		PresetConditions bool   `json:"presetConditions"`
+// 	} `json:"data"`
+// }
 
-//{"type":"data","module":"behaviors","data":{"behaviorName":"DevBaseBehavior","presetConditions":false}}
+// //{"type":"data","module":"behaviors","data":{"behaviorName":"DevBaseBehavior","presetConditions":false}}
 
-func Behavior(behavior string) {
-	u := url.URL{Scheme: "ws", Host: "localhost:8888", Path: "/socket"}
+// func Behavior(behavior string) {
+// 	u := url.URL{Scheme: "ws", Host: "localhost:8888", Path: "/socket"}
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		fmt.Println("dial:", err)
-		return
-	}
-	defer c.Close()
+// 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+// 	if err != nil {
+// 		fmt.Println("dial:", err)
+// 		return
+// 	}
+// 	defer c.Close()
 
-	message := BehaviorMessage{
-		Type:   "data",
-		Module: "behaviors",
-		Data: struct {
-			BehaviorName     string `json:"behaviorName"`
-			PresetConditions bool   `json:"presetConditions"`
-		}{
-			BehaviorName:     behavior,
-			PresetConditions: false,
-		},
-	}
+// 	message := BehaviorMessage{
+// 		Type:   "data",
+// 		Module: "behaviors",
+// 		Data: struct {
+// 			BehaviorName     string `json:"behaviorName"`
+// 			PresetConditions bool   `json:"presetConditions"`
+// 		}{
+// 			BehaviorName:     behavior,
+// 			PresetConditions: false,
+// 		},
+// 	}
 
-	marshaledMessage, err := json.Marshal(message)
-	if err != nil {
-		log.Fatal("marshal:", err)
-	}
+// 	marshaledMessage, err := json.Marshal(message)
+// 	if err != nil {
+// 		log.Fatal("marshal:", err)
+// 	}
 
-	err = c.WriteMessage(websocket.TextMessage, marshaledMessage)
-	if err != nil {
-		log.Fatal("write:", err)
-	}
-}
+// 	err = c.WriteMessage(websocket.TextMessage, marshaledMessage)
+// 	if err != nil {
+// 		log.Fatal("write:", err)
+// 	}
+// }

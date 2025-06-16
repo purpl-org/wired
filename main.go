@@ -11,6 +11,7 @@ import (
 var EnabledMods []vars.Modification = []vars.Modification{
 	mods.NewFreqChange(),
 	mods.NewWakeWordPV(),
+	mods.NewAutoUpdate(),
 }
 
 func main() {
@@ -22,6 +23,5 @@ func main() {
 func startweb() {
 	fmt.Println("starting web at port 8080")
 	http.Handle("/", http.FileServer(http.Dir("/etc/wired/webroot")))
-	mods.ImplHTTP()
 	http.ListenAndServe(":8080", nil)
 }

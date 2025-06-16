@@ -1,15 +1,19 @@
 package mods
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
-	"os"
+	"net/http"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 
 	"github.com/os-vector/wired/vars"
 )
+
+var FreqPreset int = 1
+var FreqPresetStr string = "1"
+var FreqName = "FreqChange"
+var FreqSaveFile string = filepath.Join(vars.GetModDir(FreqName), "freq")
 
 type FreqChange struct {
 	vars.Modification
@@ -19,105 +23,59 @@ func NewFreqChange() *FreqChange {
 	return &FreqChange{}
 }
 
-var FreqChange_Current FreqChange_AcceptJSON
-
-type FreqChange_AcceptJSON struct {
-	Freq int `json:"freq"`
+func (m *FreqChange) Name() string {
+	return FreqName
 }
 
-func (modu *FreqChange) Name() string {
-	return "FreqChange"
-}
-
-func (modu *FreqChange) Description() string {
-	return "Modifies CPU/RAM frequency for faster operation."
-}
-
-func (modu *FreqChange) RestartRequired() bool {
-	return false
-}
-
-func (modu *FreqChange) DefaultJSON() any {
-	return FreqChange_AcceptJSON{
-		// default is balanced
-		Freq: 1,
+func (m *FreqChange) Load() error {
+	var freqInt int
+	contents, err := vars.ReadFile(FreqSaveFile)
+	if err == nil {
+		freqInt, err = strconv.Atoi(contents)
 	}
-}
-
-func (modu *FreqChange) ToFS(to string) {
-	// nothing
-}
-
-func (modu *FreqChange) Save(where string, in string) error {
-	moduin, ok := modu.DefaultJSON().(FreqChange_AcceptJSON)
-	if !ok {
-		return errors.New("internal mod error: Save(), DefaultJSON not correct type")
-	}
-	json.Unmarshal([]byte(in), &moduin)
-	saveJson, err := json.Marshal(moduin)
 	if err != nil {
-		return err
+		fmt.Println("(freq) Error loading contents, using FreqPreset of 1")
+		freqInt = FreqPreset
+		contents = FreqPresetStr
 	}
-	os.MkdirAll(vars.GetModDir(modu, where), 0777)
-	os.WriteFile(vars.GetModDir(modu, where)+"saved.json", saveJson, 0777)
+	DoFreqChange(freqInt, contents)
 	return nil
 }
 
-func (modu *FreqChange) Load() error {
-	moduin, ok := modu.DefaultJSON().(FreqChange_AcceptJSON)
-	if !ok {
-		return errors.New("internal mod error: Load(), DefaultJSON not correct type")
+func (m *FreqChange) HTTP(w http.ResponseWriter, r *http.Request) {
+	if vars.IsEndpoint(r, "set") {
+		f := r.FormValue("freq")
+		if f == "" {
+			vars.HTTPError(w, r, "empty freq")
+			return
+		}
+		fi, err := strconv.Atoi(f)
+		if err != nil {
+			vars.HTTPError(w, r, "given freq is not an int")
+			return
+		}
+		if fi != 0 && fi != 1 && fi != 2 {
+			vars.HTTPError(w, r, "given freq is not 0, 1, or 2")
+			return
+		}
+		DoFreqChange(fi, f)
+		vars.HTTPSuccess(w, r)
+		return
+	} else if vars.IsEndpoint(r, "get") {
+		c, err := vars.ReadFile(FreqSaveFile)
+		if err != nil || c == "" {
+			c = FreqPresetStr
+		}
+		w.Write([]byte(c))
+		return
 	}
-	file, err := os.ReadFile(vars.GetModDir(modu, "/") + "saved.json")
+}
+
+func DoFreqChange(freq int, freqStr string) {
+	err := vars.SaveFile(freqStr, FreqSaveFile)
 	if err != nil {
-		defaultJson, _ := json.Marshal(moduin)
-		modu.Do("/", string(defaultJson))
-		return nil
+		fmt.Println("freqchange save error:", err)
 	}
-	json.Unmarshal(file, &moduin)
-	FreqChange_Current = moduin
-	doJson, _ := json.Marshal(moduin)
-	modu.Do("/", string(doJson))
-	return nil
-}
-
-func (modu *FreqChange) Accepts() string {
-	str, ok := modu.DefaultJSON().(FreqChange_AcceptJSON)
-	if !ok {
-		log.Fatal("FreqChange Accepts(): not correct type")
-	}
-	marshedJson, err := json.Marshal(str)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(marshedJson)
-}
-
-func (modu *FreqChange) Current() string {
-	marshalled, _ := json.Marshal(FreqChange_Current)
-	return string(marshalled)
-}
-
-func (modu *FreqChange) Do(where string, in string) error {
-	moduin, ok := modu.DefaultJSON().(FreqChange_AcceptJSON)
-	if !ok {
-		return errors.New("internal mod error: Do(), DefaultJSON not correct type")
-	}
-	err := json.Unmarshal([]byte(in), &moduin)
-	if err != nil {
-		return err
-	}
-	freq := moduin.Freq
-	if freq < 0 || freq > 2 {
-		return errors.New("freq must be between 0 and 2")
-	}
-	DoFreqChange(freq)
-	modu.Save(where, in)
-	FreqChange_Current = moduin
-	return nil
-}
-
-func DoFreqChange(freq int) {
 	var cpufreq string
 	var ramfreq string
 	var gov string

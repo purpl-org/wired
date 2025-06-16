@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -45,12 +44,6 @@ func NewWakeWordPV() *WakeWordPV {
 	return &WakeWordPV{}
 }
 
-var WakeWordPV_Current WakeWordPV_AcceptJSON
-
-type WakeWordPV_AcceptJSON struct {
-	Default bool `json:"default"`
-}
-
 func (modu *WakeWordPV) Name() string {
 	return "WakeWordPV"
 }
@@ -59,18 +52,8 @@ func (modu *WakeWordPV) Description() string {
 	return "Train a new wake word with Picovoice."
 }
 
-func (modu *WakeWordPV) RestartRequired() bool {
-	return true
-}
-
-func (modu *WakeWordPV) DefaultJSON() any {
-	return BootAnim_AcceptJSON{
-		Default: true,
-	}
-}
-
-func WakeWordPV_HTTP(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/api/mods/wakeword-pv/request-model" {
+func (modu *WakeWordPV) HTTP(w http.ResponseWriter, r *http.Request) {
+	if vars.IsEndpoint(r, "request-model") {
 		kw := r.FormValue("keyword")
 		if kw == "" {
 			vars.HTTPError(w, r, "keyword not given")
@@ -111,37 +94,12 @@ func WakeWordPV_HTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		vars.HTTPSuccess(w, r)
-	} else if r.URL.Path == "/api/mods/wakeword-pv/delete-model" {
+	} else if vars.IsEndpoint(r, "delete-model") {
 		os.Remove(WakeWordPVLocation)
 		vars.HTTPSuccess(w, r)
 	}
 }
 
-func (modu *WakeWordPV) Save(where string, in string) error {
-	return nil
-}
-
 func (modu *WakeWordPV) Load() error {
-	return nil
-}
-
-func (modu *WakeWordPV) Accepts() string {
-	str, ok := modu.DefaultJSON().(WakeWordPV_AcceptJSON)
-	if !ok {
-		log.Fatal("WakeWord Accepts(): not correct type")
-	}
-	marshedJson, err := json.Marshal(str)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(marshedJson)
-}
-
-func (modu *WakeWordPV) Current() string {
-	marshalled, _ := json.Marshal(WakeWordPV_Current)
-	return string(marshalled)
-}
-
-func (modu *WakeWordPV) Do(where string, in string) error {
 	return nil
 }

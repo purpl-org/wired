@@ -7,7 +7,7 @@ async function UpdateAllMods(undata) {
     var data = await GetCurrent('FreqChange');
     var radioButtons = document.getElementsByName("frequency");
     for (var i = 0; i < radioButtons.length; i++) {
-        if (radioButtons[i].value == data.freq) {
+        if (radioButtons[i].value == data) {
             radioButtons[i].checked = true;
             break;
         }
@@ -45,8 +45,8 @@ async function UpdateAllMods(undata) {
 }
 
 async function GetCurrent(mod) {
-    let response = await fetch('/api/mods/current/' + mod);
-    let data = await response.json();
+    let response = await fetch('/api/mods/' + mod + "/get");
+    let data = response.text();
     return data;
 }
 
@@ -63,40 +63,24 @@ function HideModStatus() {
     document.getElementById('modStatus').style.display = 'none';
 }
 
-async function SendJSON(mod, json) {
-    document.getElementById('mods').style.display = 'none';
-    SetModStatus(mod + " is applying, please wait...")
-    let response = await fetch('/api/mods/modify/' + mod, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: json,
-    });
-    let data = await response.json();
-    UpdateAllMods(data)
-    if (data.status == "success") {
-        document.getElementById('mods').style.display = 'block';
-        HideModStatus()
-    } else {
-        document.getElementById('mods').style.display = 'block';
-        HideModStatus()
-    }
-    return data;
-}
-
 async function FreqChange_Submit() {
+    document.getElementById('mods').style.display = 'none';
+    SetModStatus("FreqChange is applying, please wait...")
     let freq = document.querySelector('input[name="frequency"]:checked').value;
-    let data = await SendJSON('FreqChange', `{"freq":` + freq + `}`);
-    console.log('Success:', data);
-    CheckIfRestartNeeded("FreqChange");
-}
-
-async function RainbowLights_Submit() {
-    let enabled = document.querySelector('input[name="rainbowlights"]:checked').value;
-    let data = await SendJSON('RainbowLights', `{"enabled":` + enabled + `}`);
-    console.log('Success:', data);
-    CheckIfRestartNeeded("RainbowLights");
+    try {
+        const res = await fetch("/api/mods/FreqChange/set?freq=" + freq)
+        if (!res.ok) {
+            const err = await res.json()  // { status, message }
+            document.getElementById('mods').style.display = 'block';
+            SetModStatus("FreqChange failed: " + err["message"])
+        } else {
+	    HideModStatus()
+            document.getElementById('mods').style.display = 'block';
+        }
+    } catch (e) {
+        document.getElementById('mods').style.display = 'block';
+        SetModStatus("FreqChange failed.")
+    }
 }
 
 /* <div id="wakeWordStatus">
@@ -191,7 +175,7 @@ async function genWakeWord() {
     hide("revertDefaultWakeWord")
     hide("keywordLabel")
     try {
-        const res = await fetch("/api/mods/wakeword-pv/request-model?keyword=" + keyword)
+        const res = await fetch("/api/mods/WakeWordPV/request-model?keyword=" + keyword)
         if (!res.ok) {
             const err = await res.json()  // { status, message }
             setWakeStatus(`${err.status}: ${err.message}`)
@@ -216,7 +200,7 @@ async function revertDefaultWakeWord() {
     hide("keyword")
     hide("revertDefaultWakeWord")
     hide("keywordLabel")
-    await fetch("/api/mods/wakeword-pv/delete-model")
+    await fetch("/api/mods/WakeWordPV/delete-model")
     setWakeStatus("Custom model deleted. Restarting Anki programs...")
     await RestartVic()
     setWakeStatus("Custom model deleted.")
@@ -224,17 +208,6 @@ async function revertDefaultWakeWord() {
     show("keyword")
     show("keywordLabel")
     show("revertDefaultWakeWord")
-}
-
-
-async function CheckIfRestartNeeded(mod) {
-    let response = await fetch('/api/mods/needsrestart/' + mod, {
-        method: 'POST',
-    });
-    let data = await response.text()
-    if (data.includes("true")) {
-        document.getElementById('restartNeeded').style.display = 'block';
-    }
 }
 
 async function RestartVic() {
@@ -245,7 +218,7 @@ async function RestartVic() {
     document.getElementById("restartButton").disabled = true
     document.getElementById('showDuringVicRestart').style.display = 'block';;
     document.getElementById('mods').style.display = 'none';
-    fetch('/api/restartvic', {
+    fetch('/api/extra/restartvic', {
         method: 'POST',
     }).then(response => { console.log(response); document.getElementById("restartButton").disabled = false; show("cww"); show("aud"); show("mainmods"); document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block'; })
 }
