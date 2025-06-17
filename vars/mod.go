@@ -44,12 +44,11 @@ func GetModDir(modname string) string {
 }
 
 func SaveFile(contents string, path string) error {
-	os.MkdirAll(path, 0777)
+	os.MkdirAll(filepath.Dir(path), 0777)
 	return os.WriteFile(path, []byte(contents), 0777)
 }
 
 func ReadFile(path string) (contents string, err error) {
-	fmt.Println(path)
 	out, err := os.ReadFile(path)
 	if err != nil {
 		return "", err

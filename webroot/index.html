@@ -13,9 +13,35 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             margin: 0;
+            padding: 0;
+        }
+
+        .tabs {
+            display: flex;
+            width: 80%;
+            max-width: 600px;
+            margin: 20px auto 5px;
+            background: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            border-radius: 10px 10px 10px 10px;
+            overflow: hidden;
+        }
+
+        .tabs button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #333;
+            color: #f0f0f0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tabs button.active {
+            background: #a855f7;
+            color: #1e1e1e;
         }
 
         header,
@@ -27,7 +53,8 @@
             background-color: #333;
             border-radius: 10px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            margin-top: 20px;
         }
 
         header h1 {
@@ -37,6 +64,10 @@
         h2 {
             margin-top: 10px;
             color: #a855f7;
+        }
+
+        p {
+            margin: 0 0 10px;
         }
 
         form {
@@ -77,32 +108,15 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 5px;
         }
 
         button:hover {
             background-color: #9d4edd;
         }
 
-        #restartButton {
-            margin-top: 10px;
-        }
-
-        hr {
-            border: none;
-            height: 2px;
-            background-color: #444;
-            width: 80%;
-            margin: 20px 0;
-        }
-
         .mod-section {
             margin-bottom: 10px;
-        }
-
-        #mods button,
-        #wakeWordStatus+button {
-            display: inline-block;
-            margin: 10px auto;
         }
 
         .button-container {
@@ -113,14 +127,45 @@
             margin-bottom: 10px;
         }
 
+        input[type="range"],
+        input[type="number"],
+        input[type="text"] {
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            margin: 2px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 
 <body>
     <header>
-        <h1>WireOS Settings</h1>
+        <h1>Robot Settings</h1>
     </header>
-    <div id="mainmods" class="container mod-section">
+    <div class="tabs">
+        <button class="active" data-target="#home"><code>wired</code></button>
+        <button data-target="#mainmods">Performance Profiles</button>
+        <button data-target="#cww">Custom Wake Word</button>
+        <button data-target="#aud">Auto Updates</button>
+        <button data-target="#sensitivity">Wakeword Sensitivity</button>
+    </div>
+
+    <div id="home" class="container tab-content active">
+        <h2><code>wired</code></h2>
+        <p>This is where extra configuration options exist.</p>
+    </div>
+
+    <div id="mainmods" class="container mod-section tab-content">
         <div id="modStatus"></div>
         <div id="mods">
             <h2>Performance Profiles</h2>
@@ -135,9 +180,10 @@
             </form>
         </div>
     </div>
-    <!-- just completely break the "mods" div convention i had because this is different -->
-    <div id="cww" class="container mod-section">
+
+    <div id="cww" class="container mod-section tab-content">
         <h2>Custom Wake Word</h2>
+        <p>At least two syllables, at least 5 letters.</p>
         <div id="wakeWordStatus"></div>
         <div class="button-container">
             <label id="keywordLabel" for="keyword">Desired wake word:</label>
@@ -146,7 +192,8 @@
             <button id="revertDefaultWakeWord" onclick="revertDefaultWakeWord()">Revert To Default</button>
         </div>
     </div>
-    <div id="aud" class="container mod-section">
+
+    <div id="aud" class="container mod-section tab-content">
         <h2>Auto Updates</h2>
         <div id="autoUpdateStatus"></div>
         <div class="button-container">
@@ -154,6 +201,19 @@
             <button id="autoUpdateAllow" onclick="autoUpdateAllow()">Enable</button>
         </div>
     </div>
+
+    <div id="sensitivity" class="container mod-section tab-content">
+        <h2>Wakeword Sensitivity</h2>
+        <p>Default is 0.10. 0.999 is max, 0.001 is minimum.</p>
+        <div class="button-container">
+            <input type="range" id="sensitivitySlider" min="0.001" max="0.999" step="0.001" value="0.500"
+                oninput="document.getElementById('sensitivityInput').value = this.value">
+            <input type="number" id="sensitivityInput" min="0.001" max="0.999" step="0.001" value="0.500"
+                oninput="document.getElementById('sensitivitySlider').value = this.value">
+            <button id="setSensitivityBtn" onclick="sendSensitivity()">Set</button>
+        </div>
+    </div>
+
     <div id="showDuringVicRestart" class="container" style="display: none;">
         <h1>Vector is restarting, please wait...</h1>
     </div>
