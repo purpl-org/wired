@@ -56,6 +56,10 @@ func ReadFile(path string) (contents string, err error) {
 	return string(out), nil
 }
 
+func SetAnkiPerms() {
+	
+}
+
 func ExtraHTTP(w http.ResponseWriter, r *http.Request) {
 	if IsEndpoint(r, "restartvic") {
 		RestartVic()
