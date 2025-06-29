@@ -9,7 +9,7 @@ import (
 )
 
 var SensitivityPVLocation = "/data/data/com.anki.victor/persistent/picovoice/sensitivity"
-var DefaultSensitivity = "0.10"
+var DefaultSensitivity = "0.77"
 
 type SensitivityPV struct {
 	vars.Modification
