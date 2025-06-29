@@ -34,7 +34,7 @@ const (
 	CodeUnknown
 )
 
-var WakeWordPVLocation = "/data/data/com.anki.victor/persistent/picovoice/custom.ppn"
+var WakeWordPVLocation = "/data/data/com.anki.victor/persistent/picovoice/custom_1-5-0.ppn"
 
 type WakeWordPV struct {
 	vars.Modification
@@ -62,7 +62,7 @@ func (modu *WakeWordPV) HTTP(w http.ResponseWriter, r *http.Request) {
 		var reqKW WakeWordPVRequest
 		reqKW.Keyword = kw
 		jsonKW, _ := json.Marshal(reqKW)
-		resp, err := http.Post("https://keriganc.com/wakeword-pv/create-model", "application/json", bytes.NewReader(jsonKW))
+		resp, err := http.Post("http://pvic.xyz:8079/wakeword-pv/create-model", "application/json", bytes.NewReader(jsonKW))
 		if err != nil {
 			vars.HTTPError(w, r, "network error")
 			return
