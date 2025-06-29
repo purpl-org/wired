@@ -8,27 +8,27 @@ import (
 	"github.com/os-vector/wired/vars"
 )
 
-type AutoUpdate struct {
+type JdocSettings struct {
 	vars.Modification
 }
 
-func NewAutoUpdate() *AutoUpdate {
-	return &AutoUpdate{}
+func NewJdocSettings() *JdocSettings {
+	return &JdocSettings{}
 }
 
-func (modu *AutoUpdate) Name() string {
-	return "AutoUpdate"
+func (modu *JdocSettings) Name() string {
+	return "JdocSettings"
 }
 
-func (modu *AutoUpdate) Description() string {
+func (modu *JdocSettings) Description() string {
 	return "Modifies CPU/RAM frequency for faster operation."
 }
 
-func (modu *AutoUpdate) Load() error {
+func (modu *JdocSettings) Load() error {
 	return nil
 }
 
-func (m *AutoUpdate) HTTP(w http.ResponseWriter, r *http.Request) {
+func (m *JdocSettings) HTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/api/mods/AutoUpdate/isSelfMadeBuild" {
 		if _, err := os.Stat("/etc/do-not-auto-update"); err == nil {
 			fmt.Fprintf(w, "true")

@@ -1,309 +1,159 @@
-UpdateAllMods()
+const tabs = document.querySelectorAll('.tabs button');
+tabs.forEach(btn => btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(btn.dataset.target).classList.add('active');
+}));
 
-async function UpdateAllMods(undata) {
-    document.getElementById('restartNeeded').style.display = 'none';
-    document.getElementById('showDuringVicRestart').style.display = 'none';
-
-    var data = await GetCurrent('FreqChange');
-    var radioButtons = document.getElementsByName("frequency");
-    for (var i = 0; i < radioButtons.length; i++) {
-        if (radioButtons[i].value == data.freq) {
-            radioButtons[i].checked = true;
-            break;
-        }
-    }
-    checkAutoUpdateStatus()
-
-    // data = await GetCurrent('RainbowLights');
-    // console.log(data.enabled)
-    // radioButtons = document.getElementsByName("rainbowlights");
-    // for(var i = 0; i < radioButtons.length; i++){
-    //     if(radioButtons[i].value == JSON.stringify(data.enabled)){
-    //         radioButtons[i].checked = true;
-    //         break;
-    //     }
-    // }
-
-    // let response = await GetCurrent('BootAnim');
-    // let checkbox = document.getElementById('bootAnimDefault');
-    // let divUpload = document.getElementById('bootAnimUploadHide');
-
-    // if(response.default == false) {
-    //     checkbox.checked = false;
-    //     divUpload.style.display = "block";
-
-    //     let img = document.createElement('img');
-    //     img.src = `data:image/gif;base64,${response.gifdata}`;
-    //     document.getElementById('bootAnimCurrent').innerHTML = "";
-    //     document.getElementById('bootAnimCurrent').appendChild(img);
-    // } else {
-    //     document.getElementById('bootAnimCurrent').innerHTML = "";
-    //     checkbox.checked = true;
-    //     divUpload.style.display = "none";
-    // }
-    // bootAnimCheckValidate()
-}
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function show(id) { document.getElementById(id).style.display = 'block'; }
 
 async function GetCurrent(mod) {
-    let response = await fetch('/api/mods/current/' + mod);
-    let data = await response.json();
-    return data;
+    let res = await fetch(`/api/mods/${mod}/get`);
+    return res.text();
 }
 
-function SetModStatus(message) {
-    statusMsg = document.createElement("h3")
-    statusDiv = document.getElementById('modStatus')
-    statusMsg.textContent = message
-    statusDiv.innerHTML = ""
-    document.getElementById('modStatus').style.display = 'block';
-    statusDiv.appendChild(statusMsg)
+function SetModStatus(msg) {
+    const div = document.getElementById('modStatus');
+    div.innerHTML = `<h3>${msg}</h3>`;
+    div.style.display = msg ? 'block' : 'none';
 }
 
-function HideModStatus() {
-    document.getElementById('modStatus').style.display = 'none';
-}
+function HideModStatus() { hide('modStatus'); }
 
-async function SendJSON(mod, json) {
-    document.getElementById('mods').style.display = 'none';
-    SetModStatus(mod + " is applying, please wait...")
-    let response = await fetch('/api/mods/modify/' + mod, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: json,
-    });
-    let data = await response.json();
-    UpdateAllMods(data)
-    if (data.status == "success") {
-        document.getElementById('mods').style.display = 'block';
-        HideModStatus()
-    } else {
-        document.getElementById('mods').style.display = 'block';
-        HideModStatus()
-    }
-    return data;
+async function UpdateAllMods() {
+    hide('restartNeeded');
+    hide('showDuringVicRestart');
+
+    const data = await GetCurrent('FreqChange');
+    document.getElementsByName('frequency')
+        .forEach(rb => { if (rb.value == data) rb.checked = true; });
+    checkAutoUpdateStatus();
+    setSensitivity();
 }
 
 async function FreqChange_Submit() {
-    let freq = document.querySelector('input[name="frequency"]:checked').value;
-    let data = await SendJSON('FreqChange', `{"freq":` + freq + `}`);
-    console.log('Success:', data);
-    CheckIfRestartNeeded("FreqChange");
+    hide('mods');
+    SetModStatus('FreqChange is applying, please wait...');
+    const freq = document.querySelector('input[name="frequency"]:checked').value;
+    try {
+        const res = await fetch(`/api/mods/FreqChange/set?freq=${freq}`);
+        if (!res.ok) {
+            const e = await res.json();
+            SetModStatus(`FreqChange failed: ${e.message}`);
+        } else {
+            HideModStatus();
+        }
+    } catch {
+        SetModStatus('FreqChange failed.');
+    } finally {
+        show('mods');
+    }
 }
 
-async function RainbowLights_Submit() {
-    let enabled = document.querySelector('input[name="rainbowlights"]:checked').value;
-    let data = await SendJSON('RainbowLights', `{"enabled":` + enabled + `}`);
-    console.log('Success:', data);
-    CheckIfRestartNeeded("RainbowLights");
-}
-
-/* <div id="wakeWordStatus">
-</div>
-<button id="startTraining" onclick="startWakeWordFlow()">
-    Train a new wake word
-</button>
-<button id="wakeWordListen" onclick="doListen()" style="display:none">
-    Listen
-</button>
-<button id="genWakeWord" onclick="genWakeWord()" style="display:none">
-    Generate Wake Word
-</button>
-</div> */
-
-function hide(element) {
-    document.getElementById(element).style.display = 'none';
-}
-
-function show(element) {
-    document.getElementById(element).style.display = 'block';
-}
-
-/*
-        <div id="autoUpdateStatus"></div>
-        <div class="button-container">
-            <button id="autoUpdateInhibit" onclick="autoUpdateInhibit()">Set Inhibited</button>
-            <button id="autoUpdateAllow" onclick="autoUpdateAllow()">Set Allowed</button>
-        </div>
-        <br>
-*/
-
-function setAutoUpdateStatus(status) {
-    document.getElementById("autoUpdateStatus").innerHTML = ""
-    let stat = document.createElement("p")
-    stat.innerHTML = status
-    document.getElementById("autoUpdateStatus").appendChild(stat)
-    show("autoUpdateStatus")
+async function setAutoUpdateStatus(status) {
+    const el = document.getElementById('autoUpdateStatus');
+    el.innerHTML = `<p>${status}</p>`;
+    show('autoUpdateStatus');
 }
 
 async function checkAutoUpdateStatus() {
-    hide("autoUpdateStatus")
-    hide("autoUpdateInhibit")
-    hide("autoUpdateAllow")
-    var res = await fetch("/api/mods/AutoUpdate/isSelfMadeBuild")
-    var str = await res.text() 
-    if (str.includes("true")) {
-        const err = await res.json()  // { status, message }
-        setAutoUpdateStatus("This is a self-made build. This cannot auto-update.")
+    ['autoUpdateStatus', 'autoUpdateInhibit', 'autoUpdateAllow'].forEach(hide);
+    let res = await fetch('/api/mods/AutoUpdate/isSelfMadeBuild');
+    let txt = await res.text();
+    if (txt.includes('true')) {
+        setAutoUpdateStatus('This is a self-made build. This build cannot auto-update.');
     } else {
-        res = await fetch("/api/mods/AutoUpdate/isInhibitedByUser")
-        str = await res.text() 
-        if (str.includes("true")) {
-            setAutoUpdateStatus("Auto-updates: not enabled")
-            show("autoUpdateAllow")
+        res = await fetch('/api/mods/AutoUpdate/isInhibitedByUser');
+        txt = await res.text();
+        if (txt.includes('true')) {
+            setAutoUpdateStatus('Auto-updates: not enabled');
+            show('autoUpdateAllow');
         } else {
-            setAutoUpdateStatus("Auto-updates: enabled")
-            show("autoUpdateInhibit")
+            setAutoUpdateStatus('Auto-updates: enabled');
+            show('autoUpdateInhibit');
         }
     }
 }
 
 async function autoUpdateInhibit() {
-    hide("autoUpdateStatus")
-    hide("autoUpdateInhibit")
-    hide("autoUpdateAllow")
-    await fetch("/api/mods/AutoUpdate/setInhibited")
-    checkAutoUpdateStatus()
+    ['autoUpdateStatus', 'autoUpdateInhibit', 'autoUpdateAllow'].forEach(hide);
+    await fetch('/api/mods/AutoUpdate/setInhibited');
+    checkAutoUpdateStatus();
 }
-
 async function autoUpdateAllow() {
-    hide("autoUpdateStatus")
-    hide("autoUpdateInhibit")
-    hide("autoUpdateAllow")
-    await fetch("/api/mods/AutoUpdate/setAllowed")
-    checkAutoUpdateStatus()
+    ['autoUpdateStatus', 'autoUpdateInhibit', 'autoUpdateAllow'].forEach(hide);
+    await fetch('/api/mods/AutoUpdate/setAllowed');
+    checkAutoUpdateStatus();
 }
 
 function setWakeStatus(status) {
-    document.getElementById("wakeWordStatus").innerHTML = ""
-    let stat = document.createElement("p")
-    stat.innerHTML = status
-    document.getElementById("wakeWordStatus").appendChild(stat)
+    const el = document.getElementById('wakeWordStatus');
+    el.innerHTML = `<p>${status}</p>`;
 }
 
-let recIndex = 0
-
 async function genWakeWord() {
-    var keyword = document.getElementById("keyword").value
-    setWakeStatus("Generating wake word...")
-    hide("genWakeWord")
-    hide("keyword")
-    hide("revertDefaultWakeWord")
-    hide("keywordLabel")
+    const kw = document.getElementById('keyword').value;
+    setWakeStatus('Generating wake word...');
+    //['genWakeWord', 'keyword', 'revertDefaultWakeWord', 'keywordLabel'].forEach(hide);
     try {
-        const res = await fetch("/api/mods/wakeword-pv/request-model?keyword=" + keyword)
+        const res = await fetch(`/api/mods/WakeWordPV/request-model?keyword=${kw}`);
         if (!res.ok) {
-            const err = await res.json()  // { status, message }
-            setWakeStatus(`${err.status}: ${err.message}`)
+            const e = await res.json();
+            setWakeStatus(`${e.status}: ${e.message}`);
         } else {
-            setWakeStatus("Wake word generated and installed. Restarting anki programs...")
-            await RestartVic()
-            setWakeStatus("Your new wake word is now implemented.")
+            setWakeStatus('Wake word generated and installed. Restarting...');
+            await RestartVic();
+            setWakeStatus('Your new wake word is now implemented.');
         }
     } catch (e) {
-        setWakeStatus(`network error: ${e.message}`)
+        setWakeStatus(`network error: ${e.message}`);
     } finally {
-        show("keyword")
-        show("genWakeWord")
-        show("revertDefaultWakeWord")
-        show("keywordLabel")
+        //['keyword', 'genWakeWord', 'revertDefaultWakeWord', 'keywordLabel'].forEach(show);
     }
 }
 
 async function revertDefaultWakeWord() {
-    setWakeStatus("Deleting wake word...")
-    hide("genWakeWord")
-    hide("keyword")
-    hide("revertDefaultWakeWord")
-    hide("keywordLabel")
-    await fetch("/api/mods/wakeword-pv/delete-model")
-    setWakeStatus("Custom model deleted. Restarting Anki programs...")
-    await RestartVic()
-    setWakeStatus("Custom model deleted.")
-    show("genWakeWord")
-    show("keyword")
-    show("keywordLabel")
-    show("revertDefaultWakeWord")
+    setWakeStatus('Deleting wake word...');
+    // ['genWakeWord', 'keyword', 'revertDefaultWakeWord', 'keywordLabel'].forEach(hide);
+    await fetch('/api/mods/WakeWordPV/delete-model');
+    setWakeStatus('Custom model deleted. Restarting...');
+    await RestartVic();
+    setWakeStatus('Custom model deleted.');
+    //['keyword', 'genWakeWord', 'keywordLabel', 'revertDefaultWakeWord'].forEach(show);
 }
 
-
-async function CheckIfRestartNeeded(mod) {
-    let response = await fetch('/api/mods/needsrestart/' + mod, {
-        method: 'POST',
-    });
-    let data = await response.text()
-    if (data.includes("true")) {
-        document.getElementById('restartNeeded').style.display = 'block';
-    }
+function validateSensitivity(val) { return !(isNaN(val) || val < 0.001 || val > 0.999); }
+async function setSensitivity() {
+    const sld = document.getElementById('sensitivitySlider');
+    const inp = document.getElementById('sensitivityInput');
+    let txt = await (await fetch('/api/mods/SensitivityPV/get')).text();
+    const v = parseFloat(txt);
+    sld.value = v;
+    inp.value = v;
+}
+async function sendSensitivity() {
+    const raw = document.getElementById('sensitivityInput').value;
+    const v = parseFloat(raw);
+    if (!validateSensitivity(v)) return alert('value must be between 0.001 and 0.999');
+    await fetch(`/api/mods/SensitivityPV/set?value=${v}`);
+    console.log('sensitivity set to', v);
+    RestartVic();
 }
 
 async function RestartVic() {
-    SetModStatus("")
-    hide("cww")
-    hide("aud")
-    hide("mainmods")
-    document.getElementById("restartButton").disabled = true
-    document.getElementById('showDuringVicRestart').style.display = 'block';;
-    document.getElementById('mods').style.display = 'none';
-    fetch('/api/restartvic', {
-        method: 'POST',
-    }).then(response => { console.log(response); document.getElementById("restartButton").disabled = false; show("cww"); show("aud"); show("mainmods"); document.getElementById('restartNeeded').style.display = 'none'; document.getElementById('showDuringVicRestart').style.display = 'none'; document.getElementById('mods').style.display = 'block'; })
-}
-
-async function BootAnim_Test() {
-    document.getElementById('mods').style.display = 'none';
-    SetModStatus("Will show boot animation on screen for 10 seconds...")
-    let response = await fetch('/api/mods/custom/TestBootAnim', {
-        method: 'POST',
-    });
-    let data = await response.json();
-    if (data.status == "success") {
-        document.getElementById('mods').style.display = 'block';
-        SetModStatus("")
-    } else {
-        document.getElementById('mods').style.display = 'block';
-        SetModStatus("TestBootAnim error: " + data.message)
-    }
-    return data;
-}
-
-function bootAnimCheckValidate() {
-    let checkbox = document.getElementById('bootAnimDefault');
-    let divUpload = document.getElementById('bootAnimUploadHide');
-
-    if (checkbox.checked == true) {
-        divUpload.style.display = "none";
-        document.getElementById('bootAnimCurrent').style.display = "none";
-    } else {
-        divUpload.style.display = "block";
-        document.getElementById('bootAnimCurrent').style.display = "block";
-    }
-}
-
-async function BootAnim_Submit() {
-    let checkbox = document.getElementById('bootAnimDefault');
-    let inputFile = document.getElementById('bootAnimUpload');
-    let gifData = "";
-
-    if (checkbox.checked == false && inputFile.files.length > 0) {
-        let file = inputFile.files[0];
-        gifData = await new Promise((resolve) => {
-            let reader = new FileReader();
-            reader.onload = (event) => resolve(event.target.result.split(',')[1]);
-            reader.readAsDataURL(file);
-        });
-    }
-
-    let json = `{"default": ${checkbox.checked}, "gifdata": "${gifData}"}`;
-    let banimresp = await SendJSON('BootAnim', json);
-    if (banimresp == "error") {
-        alert(banimresp)
-    }
+  const tabsEl = document.querySelector('.tabs');
+  const activePanel = document.querySelector('.tab-content.active');
+  tabsEl.style.display = 'none';
+  if (activePanel) activePanel.classList.remove('active');
+  show('showDuringVicRestart');
+  await fetch('/api/extra/restartvic', { method: 'POST' });
+  hide('showDuringVicRestart');
+  tabsEl.style.display = 'flex';
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = '');
+  if (activePanel) activePanel.classList.add('active');
 }
 
 
-
-
-
-
+UpdateAllMods();
