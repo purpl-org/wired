@@ -13,6 +13,7 @@ var EnabledMods []vars.Modification = []vars.Modification{
 	mods.NewWakeWordPV(),
 	mods.NewAutoUpdate(),
 	mods.NewSensitivityPV(),
+	mods.NewJdocSettings(),
 }
 
 func main() {
