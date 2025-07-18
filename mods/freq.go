@@ -10,8 +10,8 @@ import (
 	"github.com/os-vector/wired/vars"
 )
 
-var FreqPreset int = 0
-var FreqPresetStr string = "0"
+var FreqPreset int = 1
+var FreqPresetStr string = "1"
 var FreqName = "FreqChange"
 var FreqSaveFile string = filepath.Join(vars.GetModDir(FreqName), "freq2")
 
