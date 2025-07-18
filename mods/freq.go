@@ -10,8 +10,8 @@ import (
 	"github.com/os-vector/wired/vars"
 )
 
-var FreqPreset int = 1
-var FreqPresetStr string = "1"
+var FreqPreset int = 0
+var FreqPresetStr string = "0"
 var FreqName = "FreqChange"
 var FreqSaveFile string = filepath.Join(vars.GetModDir(FreqName), "freq2")
 
@@ -86,7 +86,7 @@ func DoFreqChange(freq int, freqStr string) {
 		gov = "interactive"
 	case freq == 1:
 		cpufreq = "729600"
-		ramfreq = "550000"
+		ramfreq = "400000"
 		gov = "interactive"
 	case freq == 2:
 		cpufreq = "1267200"
