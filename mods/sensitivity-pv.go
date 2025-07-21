@@ -8,8 +8,8 @@ import (
 	"github.com/os-vector/wired/vars"
 )
 
-var SensitivityPVLocation = "/data/data/com.anki.victor/persistent/picovoice/sensitivity"
-var DefaultSensitivity = "0.77"
+var SensitivityPVLocation = "/data/data/com.anki.victor/persistent/picovoice/sensitivity2"
+var DefaultSensitivity = "0.45"
 
 type SensitivityPV struct {
 	vars.Modification
