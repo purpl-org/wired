@@ -6,144 +6,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mods</title>
     <style>
-        body {
-            background-color: #1e1e1e;
-            color: #f0f0f0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 0;
+        /** css by Jacob Humston **/
+
+        @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+
+        :root {
+            --color-1: #1f1f1f;
+            --color-2: #d6d6d6;
+            --color-3: #7744ad;
+            --color-4: #a171d4;
+            --color-5: #1d1b1b;
+            --color-6: #f59cff;
         }
 
-        .tabs {
-            display: flex;
-            width: 80%;
-            max-width: 700px;
-            margin: 20px auto 5px;
-            background: #333;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-            border-radius: 10px 10px 10px 10px;
-            overflow: hidden;
+        body, html, button, input, select, textarea {
+            font-family: "Google Sans Code", monospace;
+        }
+        
+        body, html {
+            background-color: var(--color-1);
+            color: var(--color-2);
+            padding: 0px;
+            margin: 0px;
         }
 
-        .tabs button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: #333;
-            color: #f0f0f0;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .tabs button.active {
-            background: #a855f7;
-            color: #1e1e1e;
-        }
-
-        header,
-        .container {
+        h1 {
+            color: var(--color-3);
             text-align: center;
-            padding: 10px;
-            width: 80%;
-            max-width: 600px;
-            background-color: #333;
-            border-radius: 10px;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 10px;
-            margin-top: 20px;
         }
 
-        header h1 {
-            margin: 0;
+        h1::before {
+            content: 'PurplOS ';
         }
 
         h2 {
-            margin-top: 10px;
-            color: #a855f7;
+            color: var(--color-4);
         }
 
-        p {
-            margin: 0 0 10px;
+        .container {
+            display: none;
+            text-align: center;
+            background-color: var(--color-5);
+            box-sizing: border-box;
+            padding: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            padding-bottom: 25px;
         }
 
-        form {
-            margin-bottom: 10px;
+        .active {
+            display: block;
         }
 
-        input[type="radio"],
-        input[type="checkbox"] {
+        .tabs {
+            background-color: var(--color-5);
+            padding: 10px;
+            padding-bottom: 0px;
+            text-align: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            border-bottom: solid var(--color-3) 5px;
+            margin-left: 10px;
+            margin-right: 10px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .tabs button {
+            display: inline-block;
+            background-color: var(--color-3);
+            color: var(--color-2);
+            padding: 5px;
+            border: none;
+            border-bottom: solid var(--color-3) 5px;
+            padding-bottom: 2px;
+            font-size: medium;
+            padding-left: 10px;
+            padding-right: 10px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .tabs button.active {
+            border-bottom: solid var(--color-6) 5px;
+            font-weight: bold;
+        }
+
+        .tabs :first-child {
             display: none;
         }
 
-        label {
-            display: inline-block;
-            padding: 10px;
-            border: 2px solid #444;
-            border-radius: 5px;
-            margin: 5px;
+        .tabs button:hover {
+            background-color: var(--color-4);
             cursor: pointer;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-
-        input[type="radio"]:checked+label,
-        input[type="checkbox"]:checked+label {
-            background-color: #a855f7;
-            border-color: #9d4edd;
-            color: #1e1e1e;
-        }
-
-        label:hover {
-            background-color: #444;
-        }
-
-        button {
-            background-color: #a855f7;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 5px;
-        }
-
-        button:hover {
-            background-color: #9d4edd;
-        }
-
-        .mod-section {
-            margin-bottom: 10px;
+            border-bottom: solid var(--color-4) 5px;
         }
 
         .button-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            text-align: center;
         }
 
-        input[type="range"],
-        input[type="number"],
-        input[type="text"] {
-            padding: 4px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background: #1e1e1e;
-            color: #f0f0f0;
-            margin: 2px;
+        .button-container button {
+            display: inline-block !important;
         }
 
-        .tab-content {
+        .container button {
+            background-color: var(--color-3);
+            color: var(--color-2);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: var(--color-4);
+            cursor: pointer;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            border-bottom: solid var(--color-3) 2px;
+            color: var(--color-3);
+            margin-bottom: 15px;
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        label::before {
+            content: ':';
+        }
+
+        form label {
+            display: inline;
+            border: none;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        form label::before {
+            content: '';
+        }
+
+        input[type="radio"] {
+            transform: scale(1.5);
+            margin-right: 5px;
+            margin-left: 15px;
+            cursor: pointer;
+            accent-color: var(--color-3);
+        }
+
+        input[type="range"] {
+            accent-color: var(--color-3);
+        }
+
+        input[type="text"], select, input[type="number"] {
+            background-color: var(--color-1);
+            color: var(--color-2);
+            border: solid var(--color-3) 2px;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        #home p::after {
+            content: ' Select a tab above to get started.';
+        }
+
+        #home h2 code {
             display: none;
         }
 
-        .tab-content.active {
+        #home h2::before {
             display: block;
+            content: 'Welcome to PurplOS Robot Settings!';
         }
     </style>
 </head>
