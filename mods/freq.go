@@ -13,7 +13,7 @@ import (
 var FreqPreset int = 1
 var FreqPresetStr string = "1"
 var FreqName = "FreqChange"
-var FreqSaveFile string = filepath.Join(vars.GetModDir(FreqName), "freq")
+var FreqSaveFile string = filepath.Join(vars.GetModDir(FreqName), "freq2")
 
 type FreqChange struct {
 	vars.Modification
@@ -85,9 +85,9 @@ func DoFreqChange(freq int, freqStr string) {
 		ramfreq = "400000"
 		gov = "interactive"
 	case freq == 1:
-		cpufreq = "800000"
-		ramfreq = "600000"
-		gov = "ondemand"
+		cpufreq = "729600"
+		ramfreq = "400000"
+		gov = "interactive"
 	case freq == 2:
 		cpufreq = "1267200"
 		ramfreq = "800000"

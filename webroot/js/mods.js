@@ -31,6 +31,8 @@ async function UpdateAllMods() {
         .forEach(rb => { if (rb.value == data) rb.checked = true; });
     checkAutoUpdateStatus();
     setSensitivity();
+    getTimezone()
+    getLocation()
 }
 
 async function FreqChange_Submit() {
@@ -114,6 +116,75 @@ async function genWakeWord() {
     }
 }
 
+function setJdocStatus(status) {
+    const el = document.getElementById('jdocStatus');
+    el.innerHTML = `<p>${status}</p>`;
+}
+
+async function setLocation() {
+    const v = document.getElementById('location').value;
+    setJdocStatus("Setting location...")
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/setLocation?location=${v}`);
+        if (!res.ok) {
+            const e = await res.json();
+            setJdocStatus(`${e.status}: ${e.message}`);
+        } else {
+            getLocation()
+            setJdocStatus('Successfully set location.');
+        }
+    } catch (e) {
+        setJdocStatus(`network error: ${e.message}`);
+    }
+}
+
+async function setTimezone() {
+    const v = document.getElementById('timezone').value;
+    setJdocStatus("Setting time zone...")
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/setTimezone?timezone=${v}`);
+        if (!res.ok) {
+            const e = await res.json();
+            setJdocStatus(`${e.status}: ${e.message}`);
+        } else {
+            getTimezone()
+            setJdocStatus('Successfully set time zone.');
+        }
+    } catch (e) {
+        setJdocStatus(`network error: ${e.message}`);
+    }
+}
+
+async function getLocation() {
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/getLocation`);
+        if (!res.ok) {
+            const e = await res.json();
+            console.log(`${e.status}: ${e.message}`);
+        } else {
+            const e = await res.text();
+            document.getElementById('location').value = e;
+        }
+    } catch (e) {
+        console.log(`network error: ${e.message}`);
+    }
+}
+
+async function getTimezone() {
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/getTimezone`);
+        if (!res.ok) {
+            const e = await res.json();
+            console.log(`${e.status}: ${e.message}`);
+        } else {
+            const e = await res.text();
+            document.getElementById('timezone').value = e;
+        }
+    } catch (e) {
+        console.log(`network error: ${e.message}`);
+    }
+}
+
 async function revertDefaultWakeWord() {
     setWakeStatus('Deleting wake word...');
     // ['genWakeWord', 'keyword', 'revertDefaultWakeWord', 'keywordLabel'].forEach(hide);
@@ -143,16 +214,16 @@ async function sendSensitivity() {
 }
 
 async function RestartVic() {
-  const tabsEl = document.querySelector('.tabs');
-  const activePanel = document.querySelector('.tab-content.active');
-  tabsEl.style.display = 'none';
-  if (activePanel) activePanel.classList.remove('active');
-  show('showDuringVicRestart');
-  await fetch('/api/extra/restartvic', { method: 'POST' });
-  hide('showDuringVicRestart');
-  tabsEl.style.display = 'flex';
-  document.querySelectorAll('.tab-content').forEach(c => c.style.display = '');
-  if (activePanel) activePanel.classList.add('active');
+    const tabsEl = document.querySelector('.tabs');
+    const activePanel = document.querySelector('.tab-content.active');
+    tabsEl.style.display = 'none';
+    if (activePanel) activePanel.classList.remove('active');
+    show('showDuringVicRestart');
+    await fetch('/api/extra/restartvic', { method: 'POST' });
+    hide('showDuringVicRestart');
+    tabsEl.style.display = 'flex';
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = '');
+    if (activePanel) activePanel.classList.add('active');
 }
 
 
