@@ -62,7 +62,7 @@ func (modu *WakeWordPV) HTTP(w http.ResponseWriter, r *http.Request) {
 		var reqKW WakeWordPVRequest
 		reqKW.Keyword = kw
 		jsonKW, _ := json.Marshal(reqKW)
-		resp, err := http.Post("http://pvic.xyz:8079/wakeword-pv/create-model", "application/json", bytes.NewReader(jsonKW))
+		resp, err := http.Post("https://wakeword.api.froggitti.net/wakeword-pv/create-model", "application/json", bytes.NewReader(jsonKW))
 		if err != nil {
 			vars.HTTPError(w, r, "network error")
 			return
