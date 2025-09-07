@@ -86,7 +86,11 @@ func (m *JdocSettings) HTTP(w http.ResponseWriter, r *http.Request) {
 			vars.HTTPError(w, r, err.Error())
 			return
 		}
-		w.Write([]byte(fmt.Sprint(temp)))
+		var ret string = "c"
+		if temp {
+			ret = "f"
+		}
+		w.Write([]byte(ret))
 		return
 	} else {
 		vars.HTTPError(w, r, "404 not found")

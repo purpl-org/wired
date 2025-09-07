@@ -33,6 +33,7 @@ async function UpdateAllMods() {
     setSensitivity();
     getTimezone()
     getLocation()
+    getTempUnits()
 }
 
 async function FreqChange_Submit() {
@@ -155,6 +156,23 @@ async function setTimezone() {
     }
 }
 
+async function setTempUnits() {
+    const v = document.getElementById('tUnits').value;
+    setJdocStatus("Setting time zone...")
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/setFahrenheit?t=${v}`);
+        if (!res.ok) {
+            const e = await res.json();
+            setJdocStatus(`${e.status}: ${e.message}`);
+        } else {
+            getTimezone()
+            setJdocStatus('Successfully set temp units.');
+        }
+    } catch (e) {
+        setJdocStatus(`network error: ${e.message}`);
+    }
+}
+
 async function getLocation() {
     try {
         const res = await fetch(`/api/mods/JdocSettings/getLocation`);
@@ -179,6 +197,21 @@ async function getTimezone() {
         } else {
             const e = await res.text();
             document.getElementById('timezone').value = e;
+        }
+    } catch (e) {
+        console.log(`network error: ${e.message}`);
+    }
+}
+
+async function getTempUnits() {
+    try {
+        const res = await fetch(`/api/mods/JdocSettings/getFahrenheit`);
+        if (!res.ok) {
+            const e = await res.json();
+            console.log(`${e.status}: ${e.message}`);
+        } else {
+            const e = await res.text();
+            document.getElementById('tUnits').value = e;
         }
     } catch (e) {
         console.log(`network error: ${e.message}`);
