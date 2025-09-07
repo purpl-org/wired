@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/digital-dream-labs/vector-go-sdk/pkg/vectorpb"
@@ -50,6 +51,19 @@ func (m *JdocSettings) HTTP(w http.ResponseWriter, r *http.Request) {
 			vars.HTTPError(w, r, err.Error())
 			return
 		}
+	} else if r.URL.Path == "/api/mods/JdocSettings/setFahrenheit" {
+		temp := r.FormValue("temp")
+		var gib bool
+		if temp == "f" {
+			gib = true
+		} else {
+			gib = false
+		}
+		err := setFahrenheit(gib)
+		if err != nil {
+			vars.HTTPError(w, r, err.Error())
+			return
+		}
 	} else if r.URL.Path == "/api/mods/JdocSettings/getLocation" {
 		location, err := getLocation()
 		if err != nil {
@@ -65,6 +79,18 @@ func (m *JdocSettings) HTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Write([]byte(timezone))
+		return
+	} else if r.URL.Path == "/api/mods/JdocSettings/getFahrenheit" {
+		temp, err := getFahrenheit()
+		if err != nil {
+			vars.HTTPError(w, r, err.Error())
+			return
+		}
+		var ret string = "c"
+		if temp {
+			ret = "f"
+		}
+		w.Write([]byte(ret))
 		return
 	} else {
 		vars.HTTPError(w, r, "404 not found")
@@ -84,6 +110,11 @@ func setTimezone(timezone string) error {
 		return errors.New("empty time zone")
 	}
 	return setSettingSDKstring("time_zone", timezone)
+}
+
+func setFahrenheit(isF bool) error {
+	setSettingSDKintbool("temp_is_fahrenheit", fmt.Sprint(isF))
+	return nil
 }
 
 func getLocation() (string, error) {
@@ -128,6 +159,27 @@ func getTimezone() (string, error) {
 	return decodedDoc.TimeZone, nil
 }
 
+func getFahrenheit() (bool, error) {
+	v, err := vars.GetVec()
+	if err != nil {
+		return false, err
+	}
+	r, err := v.Conn.PullJdocs(ctx,
+		&vectorpb.PullJdocsRequest{
+			JdocTypes: []vectorpb.JdocType{
+				vectorpb.JdocType_ROBOT_SETTINGS,
+			},
+		},
+	)
+	if err != nil {
+		return false, err
+	}
+	doc := r.NamedJdocs[0].Doc.JsonDoc
+	var decodedDoc robotSettingsJson
+	json.Unmarshal([]byte(doc), &decodedDoc)
+	return decodedDoc.TempIsFahrenheit, nil
+}
+
 var transCfg = &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore SSL warnings
 }
@@ -147,6 +199,25 @@ func setSettingSDKstring(setting string, value string) error {
 	if err != nil {
 		panic(err)
 	}
+	return nil
+}
+
+func setSettingSDKintbool(setting string, value string) error {
+	url := "https://localhost:443/v1/update_settings"
+	var updateJSON = []byte(`{"update_settings": true, "settings": {"` + setting + `": ` + value + ` } }`)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(updateJSON))
+	guid, err := vars.GetGUID()
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+guid)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Transport: transCfg}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
 	return nil
 }
 
